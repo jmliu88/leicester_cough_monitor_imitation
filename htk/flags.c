@@ -1,0 +1,2 @@
+int isMemInit=0;
+

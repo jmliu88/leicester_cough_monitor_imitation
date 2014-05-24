@@ -1,0 +1,19 @@
+#pragma once
+class FillerTrain
+{
+public:
+	void init(std::string inWorkingDir,std::string inMfccList);
+	void run(int repTimes,double var);
+	std::string getOutputDir();
+	std::string getFillerLabelDir();
+
+	void writeFillerProtoFile(std::string tar,std::string tarKind,int numState,int vecsize,int nummixes);
+	void updateFillerHmm(std::string src,std::string tar,int idx,double var,int vecsize);
+private:
+	std::string workingDir;
+	std::string mfccList;
+	std::string tmpDir;
+	std::string fillerLabelDir;
+	std::string modelDir;
+	std::string outputDir;
+};

@@ -1,0 +1,52 @@
+#pragma once
+static int ifprint=0;
+#include "wavformat.h"
+#include "stdio.h"
+#include "mad.h"
+#include "string"
+extern "C"
+{
+#include "bstdfile.h"
+}
+
+#ifndef ZERO_FRAME
+	#define ZERO_FRAME -100
+#endif
+
+#ifndef NOT_INITED
+	#define NOT_INITED -101
+#endif
+
+
+
+class Mp3Decoder
+{
+public:
+	Mp3Decoder();
+	~Mp3Decoder();
+	int init(char* inPath);
+	int envClear();
+	int run(std::string outPath,int frame_start,int frame_th);
+	void writeWavHeader(std::string input,std::string output,unsigned short nchannel,unsigned int datasize);
+private:
+
+public:
+	static const int INPUT_BUFFER_SIZE=5*8192;
+	static const int OUTPUT_BUFFER_SIZE=8192;
+	unsigned int dataSize;//for wav format
+	unsigned short nchannel;
+private:
+	struct mad_stream	*Stream;
+	struct mad_frame	*Frame;
+	struct mad_synth	*Synth;
+	mad_timer_t			Timer;
+	unsigned char		*InputBuffer,
+						*OutputBuffer;
+	unsigned char	*OutputBufferEnd;
+	bstdfile_t			*BstdFile;
+	FILE *InputFp;
+	unsigned char isInited;
+	unsigned long FrameCount;
+	double msPerFrame;
+	double unitScale;
+};

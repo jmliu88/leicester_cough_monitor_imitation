@@ -1,0 +1,281 @@
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/repos/project/!svn/ver/401/hmmcough/src
+END
+HashTable.h
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/repos/project/!svn/ver/399/hmmcough/src/HashTable.h
+END
+mfccReader.h
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/repos/project/!svn/ver/400/hmmcough/src/mfccReader.h
+END
+CoughTrain.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/project/!svn/ver/400/hmmcough/src/CoughTrain.cpp
+END
+wavformat.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/repos/project/!svn/ver/399/hmmcough/src/wavformat.cpp
+END
+WrapHHEd.h
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/repos/project/!svn/ver/399/hmmcough/src/WrapHHEd.h
+END
+glb.h
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/repos/project/!svn/ver/399/hmmcough/src/glb.h
+END
+WrapHInit.h
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/repos/project/!svn/ver/399/hmmcough/src/WrapHInit.h
+END
+FillerTrain.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/repos/project/!svn/ver/400/hmmcough/src/FillerTrain.cpp
+END
+active.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/repos/project/!svn/ver/399/hmmcough/src/active.cpp
+END
+WrapHParse.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/project/!svn/ver/399/hmmcough/src/WrapHParse.cpp
+END
+WrapHCopy.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/repos/project/!svn/ver/399/hmmcough/src/WrapHCopy.cpp
+END
+Util.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/repos/project/!svn/ver/401/hmmcough/src/Util.cpp
+END
+WrapHVite.h
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/repos/project/!svn/ver/399/hmmcough/src/WrapHVite.h
+END
+WrapHRest.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/repos/project/!svn/ver/400/hmmcough/src/WrapHRest.cpp
+END
+Recognition.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/repos/project/!svn/ver/400/hmmcough/src/Recognition.cpp
+END
+WrapHERest.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/project/!svn/ver/400/hmmcough/src/WrapHERest.cpp
+END
+PreProcess.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/project/!svn/ver/400/hmmcough/src/PreProcess.cpp
+END
+WrapHCompV.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/project/!svn/ver/399/hmmcough/src/WrapHCompV.cpp
+END
+EmbeddedTrain.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/repos/project/!svn/ver/400/hmmcough/src/EmbeddedTrain.cpp
+END
+Mp3Decoder.h
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/repos/project/!svn/ver/399/hmmcough/src/Mp3Decoder.h
+END
+CommonTrain.h
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/repos/project/!svn/ver/399/hmmcough/src/CommonTrain.h
+END
+HashTable.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/repos/project/!svn/ver/399/hmmcough/src/HashTable.cpp
+END
+mfccReader.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/project/!svn/ver/400/hmmcough/src/mfccReader.cpp
+END
+bstdfile.c
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/repos/project/!svn/ver/399/hmmcough/src/bstdfile.c
+END
+madlld.c
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/repos/project/!svn/ver/399/hmmcough/src/madlld.c
+END
+bstdfile.h
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/repos/project/!svn/ver/399/hmmcough/src/bstdfile.h
+END
+WrapHHEd.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/repos/project/!svn/ver/399/hmmcough/src/WrapHHEd.cpp
+END
+glb.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/repos/project/!svn/ver/399/hmmcough/src/glb.cpp
+END
+WrapHInit.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/repos/project/!svn/ver/400/hmmcough/src/WrapHInit.cpp
+END
+CoughTrain.h
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/repos/project/!svn/ver/400/hmmcough/src/CoughTrain.h
+END
+WrapHVite.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/repos/project/!svn/ver/400/hmmcough/src/WrapHVite.cpp
+END
+wavformat.h
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/repos/project/!svn/ver/399/hmmcough/src/wavformat.h
+END
+htks.h
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/repos/project/!svn/ver/399/hmmcough/src/htks.h
+END
+FillerTrain.h
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/repos/project/!svn/ver/399/hmmcough/src/FillerTrain.h
+END
+active.h
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/repos/project/!svn/ver/399/hmmcough/src/active.h
+END
+WrapHParse.h
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/repos/project/!svn/ver/399/hmmcough/src/WrapHParse.h
+END
+WrapHCopy.h
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/repos/project/!svn/ver/399/hmmcough/src/WrapHCopy.h
+END
+Util.h
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/repos/project/!svn/ver/401/hmmcough/src/Util.h
+END
+WrapHRest.h
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/repos/project/!svn/ver/399/hmmcough/src/WrapHRest.h
+END
+Mp3Decoder.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/repos/project/!svn/ver/399/hmmcough/src/Mp3Decoder.cpp
+END
+Recognition.h
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/repos/project/!svn/ver/400/hmmcough/src/Recognition.h
+END
+CommonTrain.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/repos/project/!svn/ver/400/hmmcough/src/CommonTrain.cpp
+END
+WrapHERest.h
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/repos/project/!svn/ver/399/hmmcough/src/WrapHERest.h
+END
+PreProcess.h
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/repos/project/!svn/ver/399/hmmcough/src/PreProcess.h
+END
+WrapHCompV.h
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/repos/project/!svn/ver/399/hmmcough/src/WrapHCompV.h
+END
+EmbeddedTrain.h
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/repos/project/!svn/ver/400/hmmcough/src/EmbeddedTrain.h
+END

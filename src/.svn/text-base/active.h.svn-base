@@ -1,0 +1,21 @@
+#pragma once
+#include "stdio.h"
+#include <iostream>
+#include <algorithm>
+#include <vector>
+
+using namespace std;
+
+void acExp(std::string workingDir, std::string srcDir);
+void randExp(std::string workingDir, std::string srcDir);
+void acDivideList(std::vector<std::string> labelList,std::vector<std::string> dataList,std::string &trainListPath,std::string &testListPath,int INIT_SIZE,int curfold);
+void acResult(std::string rootDir);
+void randomDivideList(std::vector<std::string> labelList,std::vector<std::string> dataList,std::string &trainListPath,vector<int> index, int size);
+class evaluation {
+public:
+	double totalhit;
+	double totalsum;
+	double total recall;
+	double totalcough;
+	double calcF1()
+};

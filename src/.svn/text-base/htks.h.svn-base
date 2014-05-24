@@ -1,0 +1,8 @@
+#include "WrapHCopy.h"
+#include "WrapHInit.h"
+#include "WrapHRest.h"
+#include "WrapHHEd.h"
+#include "WrapHERest.h"
+#include "WrapHParse.h"
+#include "WrapHCompV.h"
+#include "WrapHVite.h"

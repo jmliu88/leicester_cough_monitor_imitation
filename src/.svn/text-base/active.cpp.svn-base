@@ -1,0 +1,234 @@
+#include "active.h"
+#include "stdio.h"
+#include <iostream>
+#include "Util.h"
+#include <vector>
+#include <algorithm>
+
+#include "glb.h"
+#include "Util.h"
+#include "PreProcess.h"
+#include "CoughTrain.h"
+#include "FillerTrain.h"
+#include "EmbeddedTrain.h"
+#include "Recognition.h"
+#include "CommonTrain.h"
+#include "htks.h"
+#include "Mp3Decoder.h"
+
+
+using namespace std;
+
+void acDivideDataList(std::vector<std::string> labelList,std::vector<std::string> dataList,std::string &trainListPath,std::string &testListPath,int trainNumber, int curfold)
+{
+                 int i;
+                std::vector<std::string> trainList;
+                std::vector<std::string> testList;
+                std::vector<std::string> tempList(dataList);
+                std::random_shuffle(tempList.begin(),tempList.end());
+
+                 for (i=0;i<trainNumber;i++)
+                {
+                                trainList.push_back(tempList[i]);
+                }
+                
+                 for (i=trainNumber+1; i!=dataList.size(); i++)
+                {
+                                testList.push_back(tempList[i]);
+                }
+                writeListFile(trainListPath,trainList);
+                writeListFile(testListPath,testList);
+                printf( "%d\t%d\t%d\n" ,curfold,trainList.size(),testList.size());
+}
+void randomDivideList(std::vector<std::string> labelList,std::vector<std::string> dataList,std::string &trainListPath,vector<int> index, int size)
+{
+	vector<string> trainList;
+	
+	for(int i  = 0; i!=size; i++)
+	{
+		trainList.push_back(dataList[index[i]]);
+		
+	}
+	writeListFile(trainListPath,trainList);
+
+}
+
+void randExp(std::string workingDir, std::string srcDir)
+{
+	float INIT_RATIO = 0.5;//X percent of training data used in initial training
+	float INCREMENTAL_LENGTH = 1000;//measured by second 
+
+	createIfNotExist(workingDir);
+
+	std::string labeledListPath=srcDir+"/labeledlist.txt";
+	std::string splitedLabelDir=srcDir+"/splitedLabs";
+	std::string emptyListPath=srcDir+"/emptylist.txt";
+	std::string mfccListPath=srcDir+"/trainlist.txt";
+	
+	std::vector<std::string> labeledMfccList=readListFile(labeledListPath);
+	std::vector<std::string> labeledList=readLabListByMfccList(labeledMfccList,splitedLabelDir);
+	std::vector<std::string> emptyMfccList=readListFile(emptyListPath);
+	std::vector<std::string> emptyList=readLabListByMfccList(emptyMfccList,splitedLabelDir);
+	int coughIt=4;
+	int ebItP=3;
+	double var=0.01;
+	int fillerExp=4;
+
+	//define test data list
+	std::string coughTrainListPath;
+	std::string cTestListPath;
+	std::string fillerTrainListPath;
+	std::string fTestListPath;
+	std::string testListPath;
+	std::string cvSubPath;
+
+	cvSubPath=workingDir+"/";
+	coughTrainListPath = cvSubPath+"rootCTrain.txt";
+	fillerTrainListPath = cvSubPath+"rootFTrain.txt";
+	cTestListPath = cvSubPath+"rootCTest.txt";
+	fTestListPath = cvSubPath+"rootFTest.txt";
+	testListPath = cvSubPath+"rootAllTest.txt";
+	divideDataList(labeledList,labeledMfccList,coughTrainListPath,cTestListPath,10,1);
+	divideDataList(emptyList,emptyMfccList,fillerTrainListPath,fTestListPath,10,1);
+	combineListFile(testListPath,cTestListPath,fTestListPath);
+
+	//Find the total training time
+	vector<string> cTrainFilelist = readListFile(coughTrainListPath);
+	vector<string> fTrainFilelist = readListFile(fillerTrainListPath);
+
+	int fileNum = cTrainFilelist.size()+fTrainFilelist.size();
+	float totalFileTime = fileNum*10;
+	float trainTime = totalFileTime*(1-INIT_RATIO);
+	
+	//Generate random index for random train
+	vector<int> cIndex;
+	vector<int> fIndex;
+	for(int i =0;i!=cTrainFilelist.size();i++) {cIndex.push_back(i);};
+	for(int i =0;i!=fTrainFilelist.size();i++) {fIndex.push_back(i);};
+	random_shuffle(cIndex.begin(),cIndex.end());
+	random_shuffle(fIndex.begin(),fIndex.end());
+
+	for(int loop = 0;INCREMENTAL_LENGTH*loop < trainTime;loop++)
+	{
+		
+		ss.clear();
+		ss<<loop;
+		ss>>cvSubPath;
+		ss.clear();
+		cvSubPath=workingDir+"/"+cvSubPath;
+		createIfNotExist(cvSubPath);
+		coughTrainListPath=cvSubPath+"/"+"coughTrainList.txt";
+		cTestListPath=cvSubPath+"/"+"cTestList.txt";
+		fillerTrainListPath=cvSubPath+"/"+"fillerTrainList.txt";
+		fTestListPath=cvSubPath+"/"+"fTestList.txt";
+		//testListPath=cvSubPath+"/"+"testList.txt";
+		
+
+		int totalSize = cTrainFilelist.size()+fTrainFilelist.size();//file number
+		int cSize = INIT_RATIO*cTrainFilelist.size() + INCREMENTAL_LENGTH/10*loop*cTrainFilelist.size()/totalSize;//file number
+		int fSize = INIT_RATIO*fTrainFilelist.size() + INCREMENTAL_LENGTH/10*loop*fTrainFilelist.size()/totalSize;//file number
+
+		randomDivideList(labeledList,cTrainFilelist,coughTrainListPath,cIndex,cSize);
+		randomDivideList(emptyList,fTrainFilelist,fillerTrainListPath,fIndex,fSize);
+		//combineListFile(testListPath,cTestListPath,fTestListPath);
+		
+		printf("%d\tcoughtrain start...\n",loop);
+		CoughTrain ct;
+		ct.init(cvSubPath,coughTrainListPath,splitedLabelDir);
+		ct.run(coughIt);
+		
+		printf("%d\tfillertrain start...\n",loop);
+		FillerTrain ft;
+		ft.init(cvSubPath,fillerTrainListPath);
+		ft.run(fillerExp,var);
+
+		printf("%d\tembeddedtrain start...\n",loop);			
+		EmbeddedTrain et;
+		et.init(cvSubPath,ct.getScoredLabelDir(),ft.getFillerLabelDir(),ct.getOutputDir(),ft.getOutputDir(),coughTrainListPath,fillerTrainListPath);
+		et.run(ebItP);
+
+		printf("%d\trecognition start...\n",loop);			
+		Recognition rc;
+		rc.init(cvSubPath,et.getCMMF(),et.getFMMF(),et.getHmmList());
+		rc.run(testListPath);
+
+		printf("evaluateresult start...\n",loop);
+		evaluateResult(rc.getOutputDir(),splitedLabelDir,testListPath,cvSubPath+"/valuation.txt");
+	}
+}
+
+void acExp(std::string workingDir, std::string srcDir)
+{
+	float INIT_RATIO = 10;//X percent of training data used in initial training
+	float INCREMENTAL_LENGTH = 1000;//measured by second 
+
+	createIfNotExist(workingDir);
+
+	std::string labeledListPath=srcDir+"/labeledlist.txt";
+	std::string splitedLabelDir=srcDir+"/splitedLabs";
+	std::string emptyListPath=srcDir+"/emptylist.txt";
+	std::string mfccListPath=srcDir+"/trainlist.txt";
+	
+	std::vector<std::string> labeledMfccList=readListFile(labeledListPath);
+	std::vector<std::string> labeledList=readLabListByMfccList(labeledMfccList,splitedLabelDir);
+	std::vector<std::string> emptyMfccList=readListFile(emptyListPath);
+	std::vector<std::string> emptyList=readLabListByMfccList(emptyMfccList,splitedLabelDir);
+	int coughIt=4;
+	int ebItP=3;
+	double var=0.01;
+	int fillerExp=6;
+
+	
+	std::string cvSubPath="1";
+	std::string coughTrainListPath;
+	std::string cTestListPath;
+	std::string fillerTrainListPath;
+	std::string fTestListPath;
+	std::string testListPath;
+	//ss.clear();
+	//ss<<i;
+	//ss>>cvSubPath;
+	//ss.clear();
+	cvSubPath=workingDir+"/"+cvSubPath;
+	createIfNotExist(cvSubPath);
+	//coughTrainListPath=labeledListPath;
+	//fillerTrainListPath=emptyListPath;
+	//testListPath=mfccListPath;
+	coughTrainListPath=cvSubPath+"/"+"coughTrainList.txt";
+	cTestListPath=cvSubPath+"/"+"cTestList.txt";
+	fillerTrainListPath=cvSubPath+"/"+"fillerTrainList.txt";
+	fTestListPath=cvSubPath+"/"+"fTestList.txt";
+	testListPath=cvSubPath+"/"+"testList.txt";
+	//int seed = 1;
+	//int size = 10;//TODO
+	//randomDivideList(labeledList,labeledMfccList,coughTrainListPath,cTestListPath,seed,size);
+	//randomDivideList(emptyList,emptyMfccList,fillerTrainListPath,fTestListPath,seed,size);
+	combineListFile(testListPath,cTestListPath,fTestListPath);
+		
+	printf("%d\tcoughtrain start...\n",1);
+	CoughTrain ct;
+	ct.init(cvSubPath,coughTrainListPath,splitedLabelDir);
+	ct.run(coughIt);
+		
+	printf("%d\tfillertrain start...\n",1);
+	FillerTrain ft;
+	ft.init(cvSubPath,fillerTrainListPath);
+	ft.run(fillerExp,var);
+
+	printf("%d\tembeddedtrain start...\n",1);			
+	EmbeddedTrain et;
+	et.init(cvSubPath,ct.getScoredLabelDir(),ft.getFillerLabelDir(),ct.getOutputDir(),ft.getOutputDir(),coughTrainListPath,fillerTrainListPath);
+	et.run(ebItP);
+
+	printf("%d\trecognition start...\n",1);			
+	Recognition rc;
+	rc.init(cvSubPath,et.getCMMF(),et.getFMMF(),et.getHmmList());
+	rc.run(testListPath);
+
+	printf("evaluateresult start...\n",1);
+	evaluateResult(rc.getOutputDir(),splitedLabelDir,testListPath,cvSubPath+"/valuation.txt");
+
+	vector<string> tempDataList;
+	cout<<"Active learning Started..."<<endl;
+	
+}

@@ -1,0 +1,199 @@
+#include "wavformat.h"
+#include "stdio.h"
+wavFormat::wavFormat()
+{
+	inFile=NULL;
+}
+
+wavFormat::~wavFormat()
+{
+	audioClose();
+}
+int wavFormat::audioOpen(std::string filePath)
+{
+	if(inFile!=NULL)
+	{
+		fclose(inFile);
+		inFile=NULL;
+	}
+	inFile=fopen(filePath.c_str(),"rb");
+	PCMPos=fread((char*)(&header),1,sizeof(WavHeader),inFile);
+	nSampleWidth=header.fmt.wavFormat.wBitsPerSample;
+	nFrameRate=header.fmt.wavFormat.dwSamplesPerSec;
+	nChannel=header.fmt.wavFormat.wChannels;
+	nFrameNum=header.data.dwDataSize/(nSampleWidth*nChannel/8);
+	fseek(inFile,PCMPos,0);
+	return 0;
+}
+int wavFormat::reSample(std::string outPath,reSampleHeader* rsh)
+{
+	int p2[]={256,65536};
+	//if(rsh->dwSamplesPerSec>header.fmt.wavFormat.dwSamplesPerSec)
+	//	return -1;
+	//if(rsh->wBitsPerSample>header.fmt.wavFormat.wBitsPerSample)
+	//	return -2;//error
+	int i,j;
+	WavHeader newheader=header;
+	newheader.fmt.wavFormat.dwSamplesPerSec=rsh->dwSamplesPerSec;
+	newheader.fmt.wavFormat.wBitsPerSample=rsh->wBitsPerSample;
+	newheader.fmt.wavFormat.wChannels=rsh->wChannels;
+	newheader.fmt.wavFormat.wBlockAlign=newheader.fmt.wavFormat.wChannels*newheader.fmt.wavFormat.wBitsPerSample/8;
+	newheader.fmt.wavFormat.dwAvgBytesPerSec=newheader.fmt.wavFormat.dwSamplesPerSec*newheader.fmt.wavFormat.wBlockAlign;
+	int rate=header.fmt.wavFormat.dwSamplesPerSec/newheader.fmt.wavFormat.dwSamplesPerSec;
+	int nframeNum=nFrameNum/rate;
+	int ndatasize=nframeNum*newheader.fmt.wavFormat.wBlockAlign;
+	newheader.data.dwDataSize=ndatasize;
+	newheader.riff.dwRiffSize=ndatasize+sizeof(WavHeader)-8;
+	FILE *fp=fopen(outPath.c_str(),"wb");
+	fwrite(&newheader,1,sizeof(WavHeader),fp);
+
+	int ochannel=header.fmt.wavFormat.wChannels;
+	int nchannel=newheader.fmt.wavFormat.wChannels;
+	int obyte=header.fmt.wavFormat.wBitsPerSample/8;
+	int nbyte=newheader.fmt.wavFormat.wBitsPerSample/8;
+	char buf[64];
+	unsigned int lf,rf,mf;
+
+	if(ochannel==1)//src 1 channel
+	{
+		/*
+		==================undone=================
+		*/
+	}
+	else//src 2 channel
+	{
+		for(i=0;i<nFrameNum;i++)
+		{
+			fread(buf,1,obyte,inFile);
+			lf=bufToUInt(buf,obyte,1);
+			fread(buf,1,obyte,inFile);
+			rf=bufToUInt(buf,obyte,1);
+			if((i%rate)==0)
+			{
+				if(nchannel==1)//tar 1 channel
+				{
+					if(obyte==1)
+					{
+						mf=0xff&(lf/2+rf/2);
+						if(nbyte==2)
+						{	
+							double pct=(mf+0.0)/(p2[0]-1);
+							mf=0xffff&short((p2[1]-1)*pct-p2[1]/2);
+						}
+					}
+					else
+					{
+						mf=0xffff&(short(lf)/2+short(rf)/2);
+						if(nbyte==1)
+						{
+							double pct=(short(mf)+p2[1]/2+0.0)/(p2[1]-1);
+							mf=0xff&char((p2[0]-1)*pct);
+						}
+					}
+					for(j=0;j<nbyte;j++)
+					{
+						char tmp=(mf>>(j*8))&0xff;
+						fwrite(&tmp,1,1,fp);
+					}
+				}
+				else//tar 2 channel
+				{
+					if(obyte==1)
+					{
+						if(nbyte==2)
+						{	
+							double pct=(lf+0.0)/(p2[0]-1);
+							lf=0xffff&short((p2[1]-1)*pct-p2[1]/2);
+							pct=(rf+0.0)/(p2[0]-1);
+							rf=0xffff&short((p2[1]-1)*pct-p2[1]/2);
+						}
+					}
+					else
+					{
+						if(nbyte==1)
+						{
+							double pct=(short(lf)+p2[1]/2+0.0)/(p2[1]-1);
+							lf=0xff&char((p2[0]-1)*pct);
+							pct=(short(rf)+p2[1]/2+0.0)/(p2[1]-1);
+							rf=0xff&char((p2[0]-1)*pct);
+						}
+					}
+					for(j=0;j<nbyte;j++)
+					{
+						char tmp=(lf>>(j*8))&0xff;
+						fwrite(&tmp,1,1,fp);		
+					}
+					for(j=0;j<nbyte;j++)
+					{
+						char tmp=(rf>>(j*8))&0xff;
+						fwrite(&tmp,1,1,fp);
+					}
+				}
+			}
+		}
+	}
+	fclose(fp);
+	return 0;
+}
+void wavFormat::audioClose()
+{
+	if(inFile!=NULL)
+	{
+		fclose(inFile);
+		inFile=NULL;
+	}
+}
+unsigned int wavFormat::bufToUInt(char *buf,int bsize,int littleEndian)
+{
+	int i;
+	unsigned int ret=0;
+	if(!littleEndian)
+		for(i=0;i<bsize;i++)
+		{
+			ret=ret|((0xff&buf[i])<<((bsize-i-1)*8));
+		}
+	else
+		for(i=0;i<bsize;i++)
+		{
+			ret=ret|((0xff&buf[i])<<(i*8));
+		}
+	return ret;
+}
+
+int wavFormat::subAudio(std::string outPath,int startInSec,int durationInSec)
+{
+	if(startInSec>=totalDurationInSec())
+		return -1;
+	int i;
+	int isTail=0;
+	int startFrame=startInSec*nFrameRate;
+	int endFrame=(startInSec+durationInSec)*nFrameRate;
+	if(endFrame>=nFrameNum)
+	{
+		endFrame=nFrameNum;
+		isTail=1;
+	}
+	WavHeader newheader=header;
+	int nframeNum=endFrame-startFrame;
+	int ndatasize=nframeNum*newheader.fmt.wavFormat.wBlockAlign;
+	int frameByte=newheader.fmt.wavFormat.wBlockAlign;
+	newheader.data.dwDataSize=ndatasize;
+	newheader.riff.dwRiffSize=ndatasize+sizeof(WavHeader)-8;
+	int startPos=startFrame*frameByte;
+	FILE *fp=fopen(outPath.c_str(),"wb");
+	fwrite(&newheader,1,sizeof(WavHeader),fp);
+	fseek(inFile,startPos+PCMPos,0);
+	char buf[16];
+	for(i=0;i<nframeNum;i++)
+	{
+		fread(buf,1,frameByte,inFile);
+		fwrite(buf,1,frameByte,fp);
+	}
+	fclose(fp);
+	return isTail;
+}
+double wavFormat::totalDurationInSec()
+{
+	double sec=(nFrameNum+0.0)/nFrameRate;
+	return sec;
+}

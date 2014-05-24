@@ -1,0 +1,19 @@
+#pragma once
+#include "string"
+extern "C" {
+int mainHInit(int argc, char *argv[]);
+}
+class WrapHInit
+{
+public:
+	void init(std::string inTrainList,std::string inTarDir,std::string  inSrc,std::string inLabel,std::string inLabelDir,std::string inHmmName);
+	void run();
+	void runS2();
+private:
+	std::string trainList;
+	std::string tarDir;
+	std::string src;
+	std::string label;
+	std::string labelDir;
+	std::string hmmName;
+};

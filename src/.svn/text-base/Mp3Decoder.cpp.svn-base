@@ -1,0 +1,390 @@
+#pragma once
+#include "Mp3Decoder.h"
+int PrintFrameInfo(FILE *fp, struct mad_header *Header)
+{
+	const char	*Layer,
+				*Mode,
+				*Emphasis;
+
+	/* Convert the layer number to it's printed representation. */
+	switch(Header->layer)
+	{
+		case MAD_LAYER_I:
+			Layer="I";
+			break;
+		case MAD_LAYER_II:
+			Layer="II";
+			break;
+		case MAD_LAYER_III:
+			Layer="III";
+			break;
+		default:
+			Layer="(unexpected layer value)";
+			break;
+	}
+
+	/* Convert the audio mode to it's printed representation. */
+	switch(Header->mode)
+	{
+		case MAD_MODE_SINGLE_CHANNEL:
+			Mode="single channel";
+			break;
+		case MAD_MODE_DUAL_CHANNEL:
+			Mode="dual channel";
+			break;
+		case MAD_MODE_JOINT_STEREO:
+			Mode="joint (MS/intensity) stereo";
+			break;
+		case MAD_MODE_STEREO:
+			Mode="normal LR stereo";
+			break;
+		default:
+			Mode="(unexpected mode value)";
+			break;
+	}
+
+	/* Convert the emphasis to it's printed representation. Note that
+	 * the MAD_EMPHASIS_RESERVED enumeration value appeared in libmad
+	 * version 0.15.0b.
+	 */
+	switch(Header->emphasis)
+	{
+		case MAD_EMPHASIS_NONE:
+			Emphasis="no";
+			break;
+		case MAD_EMPHASIS_50_15_US:
+			Emphasis="50/15 us";
+			break;
+		case MAD_EMPHASIS_CCITT_J_17:
+			Emphasis="CCITT J.17";
+			break;
+#if (MAD_VERSION_MAJOR>=1) || \
+	((MAD_VERSION_MAJOR==0) && (MAD_VERSION_MINOR>=15))
+		case MAD_EMPHASIS_RESERVED:
+			Emphasis="reserved(!)";
+			break;
+#endif
+		default:
+			Emphasis="(unexpected emphasis value)";
+			break;
+	}
+	if(ifprint)
+		fprintf(fp,"%u kb/s audio MPEG layer %s stream %s CRC, "
+				"%s with %s emphasis at %d Hz sample rate\n",Header->bitrate,Layer,
+				Header->flags&MAD_FLAG_PROTECTION?"with":"without",
+				Mode,Emphasis,Header->samplerate);
+
+	return(0);
+}
+
+signed short MadFixedToSshort(mad_fixed_t Fixed)
+{
+	/* Clipping */
+	if(Fixed>=MAD_F_ONE)
+		return(SHRT_MAX);
+	if(Fixed<=-MAD_F_ONE)
+		return(-SHRT_MAX);
+
+	/* Conversion. */
+	Fixed=Fixed>>(MAD_F_FRACBITS-15);
+	return((signed short)Fixed);
+}
+static int updateSeg(FILE *fp,double *s,double *e,char *flag,double c)
+{
+	if(feof(fp)==-1)
+		return -1;
+	if(c<(*e))
+		return 0;
+	char buf[20];
+	double ts,te;
+	while(1)
+	{
+		if(fscanf(fp,"%lf\t%lf\t%s",&ts,&te,buf)==-1)
+			return -1;
+		if(strcmp(buf,flag)==0)
+		{
+			if(c<te) 
+			{
+				*s=ts;
+				*e=te;
+				return 0;
+			}
+		}
+	}
+	return -1;
+}
+Mp3Decoder::Mp3Decoder()
+{
+	isInited=0;
+}
+Mp3Decoder::~Mp3Decoder()
+{
+	envClear();
+}
+int Mp3Decoder::init(char* inPath)
+{
+	msPerFrame=26;
+	unitScale=1e4;
+	Stream=(struct mad_stream*)malloc(sizeof(struct mad_stream));
+	Frame=(struct mad_frame*)malloc(sizeof(struct mad_frame));
+	Synth=(struct mad_synth*)malloc(sizeof(struct mad_synth));
+	mad_stream_init(Stream);
+	mad_frame_init(Frame);
+	mad_synth_init(Synth);
+	mad_timer_reset(&Timer);
+	InputBuffer=(unsigned char*)malloc(INPUT_BUFFER_SIZE+MAD_BUFFER_GUARD);
+	OutputBuffer=(unsigned char*)malloc(OUTPUT_BUFFER_SIZE);
+	OutputBufferEnd=OutputBuffer+OUTPUT_BUFFER_SIZE;
+	InputFp=fopen(inPath,"rb");
+	BstdFile=NewBstdFile(InputFp);
+	isInited=1;
+	FrameCount=0;
+	return 0;
+}
+int Mp3Decoder::envClear()
+{
+	if(InputBuffer!=NULL)
+	{
+		free(InputBuffer);
+		InputBuffer=NULL;
+	}
+	if(OutputBuffer!=NULL)
+	{
+		free(OutputBuffer);
+		OutputBuffer=NULL;
+	}
+	if(InputFp!=NULL)
+	{
+		fclose(InputFp);
+		InputFp=NULL;
+	}
+	if(BstdFile!=NULL)
+	{
+		BstdFileDestroy(BstdFile);
+		BstdFile=NULL;
+	}
+
+	if(Synth!=NULL)
+	{
+		mad_synth_finish(Synth);
+		free(Synth);
+		Synth=NULL;
+	}
+	if(Frame!=NULL)
+	{
+		mad_frame_finish(Frame);
+		free(Frame);
+		Frame=NULL;
+	}
+	if(Stream!=NULL)
+	{
+		mad_stream_finish(Stream);
+		free(Stream);
+		Stream=NULL;
+	}
+	isInited=0;
+	return 0;
+}
+int Mp3Decoder::run(std::string outPath,int frame_start,int frame_th)
+{
+	if(isInited==0)
+		return NOT_INITED;
+	int ig=0;
+	FILE *OutputFp=fopen(outPath.c_str(),"wb");
+	//unsigned long FrameCount=0;
+	unsigned char *OutputPtr,*GuardPtr;
+	int Status=0;
+	int i,ful=0;
+	dataSize=0;
+	nchannel=2;
+	OutputPtr=OutputBuffer;
+	GuardPtr=0;
+	if(frame_th==-1)
+		frame_th=~(1<<31);
+	do
+	{
+
+		if(Stream->buffer==NULL || Stream->error==MAD_ERROR_BUFLEN)
+		{
+			size_t			ReadSize,
+							Remaining;
+			unsigned char	*ReadStart;
+
+			if(Stream->next_frame!=NULL)
+			{
+				Remaining=Stream->bufend-Stream->next_frame;
+				memmove(InputBuffer,Stream->next_frame,Remaining);
+				ReadStart=InputBuffer+Remaining;
+				ReadSize=INPUT_BUFFER_SIZE-Remaining;
+			}
+			else
+				ReadSize=INPUT_BUFFER_SIZE,
+					ReadStart=InputBuffer,
+					Remaining=0;
+
+			ReadSize=BstdRead(ReadStart,1,ReadSize,BstdFile);
+			if(ReadSize<=0)
+			{
+				if(ferror(InputFp))
+				{
+					if(ifprint)
+						fprintf(stderr,"read error on bit-stream (%s)\n",strerror(errno));
+					Status=1;
+				}
+				if(feof(InputFp))
+				{
+					if(ifprint)
+						fprintf(stderr,"end of input stream\n");
+				}
+				break;
+			}
+
+			if(BstdFileEofP(BstdFile))
+			{
+				GuardPtr=ReadStart+ReadSize;
+				memset(GuardPtr,0,MAD_BUFFER_GUARD);
+				ReadSize+=MAD_BUFFER_GUARD;
+			}
+
+			mad_stream_buffer(Stream,InputBuffer,ReadSize+Remaining);
+			Stream->error=(mad_error)(0);
+		}
+
+		if(mad_frame_decode(Frame,Stream))
+		{
+			if(MAD_RECOVERABLE(Stream->error))
+			{
+				if(Stream->error!=MAD_ERROR_LOSTSYNC ||
+				   Stream->this_frame!=GuardPtr)
+				{
+					if(ifprint)
+					{
+						fprintf(stderr,"recoverable frame level error (%s)\n",mad_stream_errorstr(Stream));
+						fflush(stderr);
+					}
+				}
+				continue;
+			}
+			else
+				if(Stream->error==MAD_ERROR_BUFLEN)
+					continue;
+				else
+				{
+					if(ifprint)
+						fprintf(stderr,"unrecoverable frame level error (%s).\n",mad_stream_errorstr(Stream));
+					Status=1;
+					break;
+				}
+		}
+
+		if(FrameCount==0)
+			if(PrintFrameInfo(stderr,&Frame->header))
+			{
+				Status=1;
+				break;
+			}
+
+		FrameCount++;
+		mad_timer_add(&Timer,Frame->header.duration);
+		if(FrameCount<=frame_start)
+			continue;
+
+		ig++;
+		mad_synth_frame(Synth,Frame);
+
+		for(i=0;i<Synth->pcm.length;i++)
+		{
+			signed short	Sample;
+
+			/* Left channel */
+			Sample=MadFixedToSshort(Synth->pcm.samples[0][i]);
+			
+			*(OutputPtr++)=Sample&0xff;
+			*(OutputPtr++)=Sample>>8;
+
+			/* Right channel. If the decoded stream is monophonic then
+			 * the right output channel is the same as the left one.
+			 */
+			if(MAD_NCHANNELS(&Frame->header)==2)
+				Sample=MadFixedToSshort(Synth->pcm.samples[1][i]);
+			
+			*(OutputPtr++)=Sample&0xff;
+			*(OutputPtr++)=Sample>>8;
+
+			/* Flush the output buffer if it is full. */
+			if(OutputPtr==OutputBufferEnd)
+			{
+
+				if(fwrite(OutputBuffer,1,OUTPUT_BUFFER_SIZE,OutputFp)!=OUTPUT_BUFFER_SIZE)
+				{
+					if(ifprint)
+						fprintf(stderr,"PCM write error (%s).\n",strerror(errno));
+					Status=2;
+					break;
+				}
+				OutputPtr=OutputBuffer;
+				dataSize+=OUTPUT_BUFFER_SIZE;
+			}
+		}
+		if(ig>=frame_th)
+		{
+			ful=1;
+			break;
+		}
+	}while(1);
+	
+	if(OutputPtr!=OutputBuffer && Status!=2)
+	{
+		size_t	BufferSize=OutputPtr-OutputBuffer;
+
+		if(fwrite(OutputBuffer,1,BufferSize,OutputFp)!=BufferSize)
+		{
+			if(ifprint)
+				fprintf(stderr,"PCM write error (%s).\n",strerror(errno));
+			Status=2;
+		}
+		dataSize+=BufferSize;
+	}
+	fclose(OutputFp);
+
+	return ig;
+}
+
+void Mp3Decoder::writeWavHeader(std::string input,std::string output,unsigned short nchannel,unsigned int datasize)
+{
+
+	WavHeader header;
+
+	memcpy(header.fmt.szFmtID,"fmt ",4);
+	header.fmt.dwFmtSize=16;
+	header.fmt.wavFormat.wFormatTag=1;
+	header.fmt.wavFormat.wChannels=nchannel;
+	header.fmt.wavFormat.dwSamplesPerSec=44100;
+	header.fmt.wavFormat.wBitsPerSample=16;
+	header.fmt.wavFormat.wBlockAlign=header.fmt.wavFormat.wBitsPerSample*header.fmt.wavFormat.wChannels/8;
+	header.fmt.wavFormat.dwAvgBytesPerSec=header.fmt.wavFormat.dwSamplesPerSec*header.fmt.wavFormat.wBlockAlign;
+	//header.fmt.wavFormat.pack=0;
+
+	memcpy(header.data.szDataID,"data",4);
+	header.data.dwDataSize=datasize;
+
+	memcpy(header.riff.szRiffID,"RIFF",4);
+	header.riff.dwRiffSize=datasize+sizeof(WavHeader)-8;
+	memcpy(header.riff.szRiffFormat,"WAVE",4);
+
+	FILE* r=fopen(input.c_str(),"rb");
+	FILE* w=fopen(output.c_str(),"wb");
+	fwrite(&header,sizeof(WavHeader),1,w);
+	unsigned char buf[1024];
+	while(true)
+	{
+		size_t br=fread(buf,1,1024,r);
+		if(br>0)
+			fwrite(buf,1,br,w);
+		if(br<1024)
+			break;
+	}
+	fclose(r);
+	fflush(w);
+	fclose(w);
+}

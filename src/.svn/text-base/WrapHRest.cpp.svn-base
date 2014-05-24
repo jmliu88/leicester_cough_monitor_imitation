@@ -1,0 +1,36 @@
+#pragma once
+#include "glb.h"
+#include "WrapHRest.h"
+void WrapHRest::init(std::string inTrainList,std::string inTarDir,std::string inSrc,std::string inLabel,std::string inLabelDir,std::string inHmmName,std::string inScorePath)
+{
+	trainList=inTrainList;
+	tarDir=inTarDir;
+	src=inSrc;
+	label=inLabel;
+	labelDir=inLabelDir;
+	hmmName=inHmmName;
+	scorePath=inScorePath;
+}
+void WrapHRest::run()
+{
+	char *p;
+	if(scorePath=="")
+		p=NULL;
+	else
+		p=(char*)scorePath.c_str();
+	char *(argv[])={"HRest -m 1 ","-S",(char*)trainList.c_str(),"-M",(char*)tarDir.c_str(),"-H",(char*)src.c_str(),"-l",(char*)label.c_str(),"-L",(char*)labelDir.c_str(),(char*)hmmName.c_str()};
+	int argc=sizeof(argv)/sizeof(char*);
+	mainHRest(argc,argv,p);
+}
+
+void WrapHRest::runS2()
+{
+	char *p;
+	if(scorePath=="")
+		p=NULL;
+	else
+		p=(char*)scorePath.c_str();
+	char *(argv[])={"HRest -m 1 ","-S",(char*)trainList.c_str(),"-M",(char*)tarDir.c_str(),"-H",(char*)src.c_str(),(char*)hmmName.c_str()};
+	int argc=sizeof(argv)/sizeof(char*);
+	mainHRest(argc,argv,p);
+}
