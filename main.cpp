@@ -290,18 +290,18 @@ int main(int argc, char* argv[])
 	int nfold=atoi(argv[6]);
 	int task_type=atoi(argv[7]);
 	int filler_exp=atoi(argv[8]);
-	bool dmp3=false;
+	bool dmp3=atoi(argv[9]);
 	costFeature=0;
 	costTrain=0;
 	costTest=0;
-
 	time_t s1,s2,s3;
 	time(&s1);
 	if ((task_type&1)!=0)
 		doPreProcess(dataDir,srcAudio,srcLab,dmp3);
 	time(&s2);
 	if ((task_type&2)!=0)
-		train(dataDir,rootDir,filler_exp);
+		train_model(dataDir,rootDir,2,filler_exp);
+		//train(dataDir,rootDir,filler_exp);
 	//test_model(dataDir,rootDir);
 	time(&s3);
 

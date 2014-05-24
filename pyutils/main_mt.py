@@ -1,18 +1,20 @@
+#!/usr/local/bin/python
 import sys
 import os
 import commands
 from shutil import rmtree
 import threading
 
-nfold=1
-datadir='/home/zwang/data/wav'
+nfold=2
+dmp3=1
+datadir='/home/zwang/data/audio'
 labdir='/home/zwang/data/TextGrids'
 featuredir='/home/zwang/data/hmm_mfcc'
-rootdir='/home/zwang/data/exp/'
-runPath='/home/zwang/hmmcough'
-task_type=2
+rootdir='/home/zwang/data/exp_cv/'
+runPath='/home/zwang/project/hmm/Debug/hmm'
+task_type=3
 filler_exp=7
-
+wav10dir='/home/zwang/data/wav10s'
 class run_hmm(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
@@ -26,14 +28,24 @@ class run_hmm(threading.Thread):
                 continue;
             #print subPath
             dname=itd
-            if dname not in ['ZZL']:
+            if dname not in ['BSM']:
                 continue
             datapath=datadir+'/'+dname
             labpath=labdir+'/'+dname
             rootpath=rootdir+'/'+dname
             featurepath=featuredir+'/'+dname
+            if os.path.exists(featurepath)==False:
+                os.makedirs(featurepath)
+            else:
+                print featurePath,'exist'
+                exit(0)
+            confPtr=open(os.path.join(featurepath,'myconf.txt'),'w')
+            confPtr.write(os.path.join(wav10dir,dname))
+            confPtr.close()
+            if os.path.exists(os.path.join(wav10dir,dname))==False:
+                os.makedirs(os.path.join(wav10dir,dname))
             print dname
-            cmdstr="%s %s %s %s %s %s %d %d %d"%(runPath,dname,datapath,labpath,rootpath,featurepath,nfold,task_type,filler_exp)
+            cmdstr="%s %s %s %s %s %s %d %d %d %d"%(runPath,dname,datapath,labpath,rootpath,featurepath,nfold,task_type,filler_exp,dmp3)
             ret=os.system(cmdstr);
 
 if os.path.exists(featuredir)==False:
@@ -42,7 +54,7 @@ if os.path.exists(rootdir)==False:
     os.makedirs(rootdir)
 
 lis=os.listdir(labdir)
-t_num=3
+t_num=5
 t_array=[]
 llen=len(lis)
 per=int(llen/t_num)
@@ -56,12 +68,3 @@ for i in range(t_num):
     t_array[i].set_param(sub_lis)
 for i in range(t_num):
     t_array[i].start()
-
-'''
-    if ret==0:
-        for idn in range(0,nfold):
-            rmtree(rootpath+"/"+str(idn)+"/s1cLabs");
-            rmtree(rootpath+"/"+str(idn)+"/s1fLabs");
-            rmtree(rootpath+"/"+str(idn)+"/elabs");
-'''
-                

@@ -15,6 +15,7 @@ static std::string tgExt="TextGrid";
 static std::string gTarKind="MFCC_0_Z_D_A";
 static std::string s2CoughModel="cough";
 static std::string s2NoncoughModel="noncough";
+static std::string confName="myconf.txt";
 
 
 //static std::string gTarKind="MFCC_0_D_A";

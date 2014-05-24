@@ -52,6 +52,12 @@ void PreProcess::run(int frame_th,int low_th,bool tg,bool demp3)
 	std::vector<std::string> vecAudio;
 
 	FILE* inf=fopen(((workingDir+"/"+"cut.inf")).c_str(),"w");
+	std::string confPath=workingDir+"/"+confName;
+	char savePath[1024];
+	FILE* savePtr=fopen(confPath.c_str(),"r");
+	fscanf(savePtr,"%s",savePath);
+	fclose(savePtr);
+
 	if(demp3)
 	{
 		travelDir(audioDir,"mp3",&vecAudio);
@@ -87,7 +93,8 @@ void PreProcess::run(int frame_th,int low_th,bool tg,bool demp3)
 				ss<<fileName<<"_"<<j<<".wav";
 				ss>>fpath;
 				ss.clear();
-				fpath=workingDir+"/"+fpath;
+				fpath=std::string(savePath)+"/"+fpath;
+				//fpath=workingDir+"/"+fpath;
 				std::string mfccPath=mfccDir+"/"+getFileNameWithOutExt(fpath)+".mfcc";
 				std::string confPath=workingDir+"/"+"analysis.conf";
 				int isTail=wf.subAudio(fpath,curSec,frame_th);
@@ -99,7 +106,7 @@ void PreProcess::run(int frame_th,int low_th,bool tg,bool demp3)
 				WrapHCopy wh;
 				wh.init(confPath,fpath, mfccPath);
 				wh.run();	
-				remove(fpath.c_str());
+				//remove(fpath.c_str());
 				curSec+=frame_th;	
 			}
 			wf.audioClose();
@@ -133,14 +140,10 @@ void PreProcess::run(int frame_th,int low_th,bool tg,bool demp3)
 				ss<<fileName<<"_"<<j<<".wav";
 				ss>>fpath;
 
-				//!!!!!!!!!!TEMP USING
-//				int iidx=fpath.rfind('/');
-//				fpath=fpath.substr(iidx+1,fpath.size()-iidx);
-//				fpath="/home/zwang/data/wav10s/ZZL/"+fpath;
-//				printf("%s\n",fpath.c_str());
-
 				ss.clear();
-				fpath="/home/zwang/data/wav10s/ZZL/"+fpath;
+
+				fpath=std::string(savePath)+"/"+fpath;
+
 //				fpath=workingDir+"/"+fpath;
 				std::string mfccPath=mfccDir+"/"+getFileNameWithOutExt(fpath)+".mfcc";
 				std::string confPath=workingDir+"/"+"analysis.conf";
