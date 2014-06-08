@@ -13,7 +13,7 @@ featuredir='/home/zwang/data/hmm_mfcc'
 rootdir='/home/zwang/data/exp_cv/'
 runPath='/home/zwang/project/hmm/Debug/hmm'
 task_type=3
-filler_exp=7
+filler_exp=6
 wav10dir='/home/zwang/data/wav10s'
 class run_hmm(threading.Thread):
     def __init__(self):
@@ -26,25 +26,26 @@ class run_hmm(threading.Thread):
             subPath=datadir+'/'+itd
             if os.path.isdir(subPath)==False:
                 continue;
-            #print subPath
             dname=itd
-            if dname not in ['BSM']:
-                continue
             datapath=datadir+'/'+dname
             labpath=labdir+'/'+dname
             rootpath=rootdir+'/'+dname
             featurepath=featuredir+'/'+dname
-            if os.path.exists(featurepath)==False:
-                os.makedirs(featurepath)
-            else:
-                print featurePath,'exist'
-                exit(0)
-            confPtr=open(os.path.join(featurepath,'myconf.txt'),'w')
-            confPtr.write(os.path.join(wav10dir,dname))
-            confPtr.close()
-            if os.path.exists(os.path.join(wav10dir,dname))==False:
-                os.makedirs(os.path.join(wav10dir,dname))
-            print dname
+            if task_type&1 == 1:
+                if os.path.exists(featurepath)==False:
+                    os.makedirs(featurepath)
+                else:
+                    print 'SKIP',dname,featurePath,'exist'
+                    continue
+                confPtr=open(os.path.join(featurepath,'myconf.txt'),'w')
+                confPtr.write(os.path.join(wav10dir,dname))
+                confPtr.close()
+                if os.path.exists(os.path.join(wav10dir,dname))==False:
+                    os.makedirs(os.path.join(wav10dir,dname))
+                else:
+                    print 'SKIP',os.path.join(wav10dir,dname),'exist'
+                    continue
+            print 'START',dname
             cmdstr="%s %s %s %s %s %s %d %d %d %d"%(runPath,dname,datapath,labpath,rootpath,featurepath,nfold,task_type,filler_exp,dmp3)
             ret=os.system(cmdstr);
 

@@ -192,91 +192,39 @@ time(&s3);
 void train(std::string srcDir,std::string workingDir,int fillerExp)
 {
 	int i=0,j=0;
-	createEmptyDir(workingDir);
-	std::string labeledListPath=srcDir+"/labeledlist.txt";
-	std::string splitedLabelDir=srcDir+"/splitedLabs";
-	std::string emptyListPath=srcDir+"/emptylist.txt";
-	std::vector<std::string> labeledMfccList=readListFile(labeledListPath);
-	std::vector<std::string> emptyMfccList=readListFile(emptyListPath);
-
 	int coughIt=1;//4;
 	int ebItP=1;//3;
 	double var=0.01;
-	int f2c=10;
-	int minFseg=1200;
-
-	int clen=labeledMfccList.size();
-
-	int flen=emptyMfccList.size();
-
-    std::string cvSubPath;
-    std::string s1cTrainListPath;
-    std::string s1fTrainListPath;
-    std::string s1TestListPath;
-
-    ss.clear();
-    ss<<i;
-    ss>>cvSubPath;
-    ss.clear();
-    cvSubPath=workingDir+"/"+cvSubPath;
-    createEmptyDir(cvSubPath);
-
-    s1cTrainListPath=cvSubPath+"/"+"s1cTrainList.txt";
-    s1fTrainListPath=cvSubPath+"/"+"s1fTrainList.txt";
-    s1TestListPath=cvSubPath+"/"+"s2TestList.txt";
-
-    std::vector<std::string> cVec;
-    std::vector<std::string> fVec;
-    std::vector<std::string> tVec;
-    int ccount=0;
-    for(j=0;j<clen;j++)
-        ccount++;
-    for(j=0;j<clen;j++)
-    {
-        cVec.push_back(labeledMfccList[j]);
-        tVec.push_back(labeledMfccList[j]);
-    }
-
-    int fcount=0;
-    for(j=0;j<flen;j++)
-        fcount++;
-    if(fcount>ccount*f2c)
-        fcount=ccount*f2c;
-    if(fcount<minFseg)
-        fcount=minFseg;
-    for(j=0;j<flen;j++)
-    {
-        if(fVec.size()<fcount)
-            fVec.push_back(emptyMfccList[j]);
-        tVec.push_back(emptyMfccList[j]);
-    }
-    writeListFile(s1cTrainListPath,cVec);
-    writeListFile(s1fTrainListPath,fVec);
-    writeListFile(s1TestListPath,tVec);
-
+    std::string s1cTrainListPath=workingDir+"/"+"s1cTrainList.txt";
+    std::string s1fTrainListPath=workingDir+"/"+"s1fTrainList.txt";
+    std::string s1TestListPath=workingDir+"/"+"s2TestList.txt";
+    std::string splitedLabelDir=srcDir+"/splitedLabs";
+    createEmptyDir(workingDir);
     time_t s1,s2,s3;
-time(&s1);
 
+    time(&s1);
     printf("fold-%d stage-1 cough train\n",i);
     CoughTrain ct;
-    ct.init(cvSubPath,s1cTrainListPath,splitedLabelDir);
+    ct.init(workingDir,s1cTrainListPath,splitedLabelDir);
     ct.run(coughIt);
 
     printf("fold-%d stage-1 filler train\n",i);
     FillerTrain ft;
-    ft.init(cvSubPath,s1fTrainListPath);
+    ft.init(workingDir,s1fTrainListPath);
     ft.run(fillerExp,var);
 
     printf("fold-%d stage-1 embedded train\n",i);
     EmbeddedTrain et;
-    et.init(cvSubPath,ct.getScoredLabelDir(),ft.getFillerLabelDir(),ct.getOutputDir(),ft.getOutputDir(),s1cTrainListPath,s1fTrainListPath);
+    et.init(workingDir,ct.getScoredLabelDir(),ft.getFillerLabelDir(),ct.getOutputDir(),ft.getOutputDir(),s1cTrainListPath,s1fTrainListPath);
     et.run(ebItP);
-time(&s2);
+
+    time(&s2);
     printf("fold-%d stage-1 detect\n",i);
     Recognition rc;
-    rc.init(cvSubPath,et.getCMMF(),et.getFMMF(),et.getHmmList());
+    rc.init(workingDir,et.getCMMF(),et.getFMMF(),et.getHmmList());
     rc.run(s1TestListPath);
-time(&s3);
+
+    time(&s3);
     costTrain+=difftime(s2,s1);
     costTest+=difftime(s3,s2);
 }
@@ -300,9 +248,11 @@ int main(int argc, char* argv[])
 		doPreProcess(dataDir,srcAudio,srcLab,dmp3);
 	time(&s2);
 	if ((task_type&2)!=0)
-		train_model(dataDir,rootDir,2,filler_exp);
-		//train(dataDir,rootDir,filler_exp);
-	//test_model(dataDir,rootDir);
+	{
+		//train_model(dataDir,rootDir,2,filler_exp);
+		train(dataDir,rootDir,filler_exp);
+		//test(dataDir,rootDir);
+	}
 	time(&s3);
 
 	costFeature=difftime(s2,s1);

@@ -1,3 +1,4 @@
+#!/usr/local/bin/python
 import sys
 import os
 #sys.path.append('/home/zwang/workspace/htkIO')
@@ -29,7 +30,7 @@ for itd in lis:
     tenCount=0
     dname=itd
     featurepath=featuredir+'/'+dname
-    
+
     #lis=os.listdir(featurepath)
     #for itf in lis:
     #    dummy,ext=os.path.splitext(itf)
@@ -40,7 +41,7 @@ for itd in lis:
     cut_inf_ptr.close()
     tenCount = tenCount*factor
     print '#'+dname,str(tenCount/6.0)
-    
+
     for idn in range(0,nfold):
 
         predictLabPath=outDir+'/'+dname+'/'+str(idn)+'/'+'s1rec'
@@ -61,13 +62,6 @@ for itd in lis:
             itf=itf+".lab"
             trueLab=[]
             predictLab=[]
-            #tmp start
-            #if isAccept(predictLabPath+'/'+itf,'ZZL')==False:
-            #    rejectCount+=1
-            #    continue
-            #else:
-            #    acceptCount+=1
-            #tmp end
             fptr=open(predictLabPath+'/'+itf)
             while True:
                 rec=fptr.readline()
@@ -81,7 +75,7 @@ for itd in lis:
                     if predictLab==[] or st-predictLab[-1][1]>thresh:
                         predictLab.append([st,et])
                     else:
-                        predictLab[-1][1]=et    
+                        predictLab[-1][1]=et
             fptr.close()
             #get true lab
             fptr=open(trueLabPath+'/'+itf)
@@ -99,18 +93,20 @@ for itd in lis:
                     else:
                         trueLab[-1][1]=et
             fptr.close()
-            
+
             chash=[0 for o in range(len(trueLab))]
             p+=len(trueLab)
             pp+=len(predictLab)
             for sa in predictLab:
+                ok=False
                 for i in range(len(trueLab)):
                     sb=trueLab[i]
                     if not (sa[0]>=sb[1] or sa[1]<=sb[0]):
-                          tp+=1
+                          ok=True
                           chash[i]=1
-                          break
-            hit+=sum(chash)
+                if ok:
+                    hit+=1
+            tp+=sum(chash)
 
     duration=float(tenCount*10.0/60)
     precision=float(tp)/pp
@@ -134,4 +130,4 @@ wptr.close()
 
 
 
-                
+
