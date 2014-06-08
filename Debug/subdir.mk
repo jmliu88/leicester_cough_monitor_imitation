@@ -4,17 +4,14 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../detectS2.cpp \
 ../main.cpp \
 ../trainModel.cpp 
 
 OBJS += \
-./detectS2.o \
 ./main.o \
 ./trainModel.o 
 
 CPP_DEPS += \
-./detectS2.d \
 ./main.d \
 ./trainModel.d 
 
