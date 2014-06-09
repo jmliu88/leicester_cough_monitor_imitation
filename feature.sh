@@ -7,7 +7,7 @@ import threading
 
 exe='/home/zwang/project/hmm/Debug/hmm'
 tasktype=0
-root='/home/zwang/data/htkmfcc'
+root='/home/zwang/data/hmm_mfcc'
 data=root
 audio='/home/zwang/data/audio'
 lab='/home/zwang/data/TextGrids'
