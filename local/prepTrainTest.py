@@ -33,11 +33,20 @@ def foo():
     randx=random.sample(xrange(fillerTotal),fillertrain)
     fidx[randx]=True
 
-    trainCough=cli[cidx]
-    trainFiller=fli[fidx]
+    divc=int(coughtrain*2.0/3)
+    divf=int(fillertrain*2.0/3)
+    trainCough=cli[cidx][:divc]
+    trainFiller=fli[fidx][:divf]
+    devCough=cli[cidx][divc:]
+    devFiller=fli[fidx][divf:]
+
     test=np.hstack((cli[~cidx],fli[~fidx]))
-    saveList(exp+'/s1cTrainList.txt',trainCough)
-    saveList(exp+'/s1fTrainList.txt',trainFiller)
+    saveList(exp+'/s1cTrainList.txt',cli[cidx])
+    saveList(exp+'/s1fTrainList.txt',fli[fidx])
+    saveList(exp+'/s2cTrainList.txt',trainCough)
+    saveList(exp+'/s2fTrainList.txt',trainFiller)
+    saveList(exp+'/s2cDevList.txt',devCough)
+    saveList(exp+'/s2fDevList.txt',devFiller)
     saveList(exp+'/s2TestList.txt',test)
 if __name__=='__main__':
     if os.path.exists(exp)==False:
