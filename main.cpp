@@ -33,7 +33,6 @@ void doPreProcess(std::string outDir,std::string srcAudio,std::string srcLab,boo
 
 void train(std::string srcDir,std::string workingDir,int fillerExp)
 {
-	int i=0;
 	int coughIt=1;//4;
 	int ebItP=1;//3;
 	double var=0.01;
@@ -45,23 +44,23 @@ void train(std::string srcDir,std::string workingDir,int fillerExp)
     time_t s1,s2,s3;
 
     time(&s1);
-    printf("fold-%d stage-1 cough train\n",i);
+    printf("stage-1 cough train\n");
     CoughTrain ct;
     ct.init(workingDir,s1cTrainListPath,splitedLabelDir);
     ct.run(coughIt);
 
-    printf("fold-%d stage-1 filler train\n",i);
+    printf("stage-1 filler train\n");
     FillerTrain ft;
     ft.init(workingDir,s1fTrainListPath);
     ft.run(fillerExp,var);
 
-    printf("fold-%d stage-1 embedded train\n",i);
+    printf("stage-1 embedded train\n");
     EmbeddedTrain et;
     et.init(workingDir,ct.getScoredLabelDir(),ft.getFillerLabelDir(),ct.getOutputDir(),ft.getOutputDir(),s1cTrainListPath,s1fTrainListPath);
     et.run(ebItP);
 
     time(&s2);
-    printf("fold-%d stage-1 detect\n",i);
+    printf("stage-1 detect\n");
     Recognition rc;
     rc.init(workingDir,et.getCMMF(),et.getFMMF(),et.getHmmList());
     rc.run(s1TestListPath);
@@ -69,6 +68,18 @@ void train(std::string srcDir,std::string workingDir,int fillerExp)
     time(&s3);
     costTrain+=difftime(s2,s1);
     costTest+=difftime(s3,s2);
+}
+void test(std::string modelDir,std::string testPath,std::string workingDir)
+{
+    std::string cmmf=modelDir+"/eMMf.mmf";
+    std::string fmmf=modelDir+"/eMMf2.mmf";
+    std::string hmmlist=modelDir+"/eHmmlist.txt";
+    createEmptyDir(workingDir);
+
+    printf("stage-1 detect\n");
+    Recognition rc;
+    rc.init(workingDir,cmmf,fmmf,hmmlist);
+    rc.run(testPath);
 }
 int main(int argc, char* argv[])
 {
@@ -123,6 +134,27 @@ int main(int argc, char* argv[])
 		fputs(timeStr,timeLogFptr);
 		fclose(timeLogFptr);
 	}
+    else if(task_type==2)
+    {
+        std::string rootDir=std::string(argv[2]);
+        std::string testPath=std::string(argv[3]);
+        std::string modelDir=std::string(argv[4]);
+		time(&s1);
+		test(modelDir,testPath,rootDir);
+		time(&s2);
+		cost=difftime(s2,s1);
+		char timeStr[64];
+		std::string timeLogPath=rootDir+"/test.log";
+		FILE* timeLogFptr=fopen(timeLogPath.c_str(),"w");
+		fprintf(timeLogFptr,"cost:%lf\n",cost/60.0);
+		strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s1));
+		fputs(timeStr,timeLogFptr);
+		strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s2));
+		fputs(timeStr,timeLogFptr);
+		strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s3));
+		fputs(timeStr,timeLogFptr);
+		fclose(timeLogFptr);
+    }
 	else
 	{
 		printf("unknown tasktype\n");

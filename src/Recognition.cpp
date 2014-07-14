@@ -25,7 +25,7 @@ void Recognition::run(std::string mfccList)
 	std::string tdict=tmpDir+"/dict.txt";
 	std::string tgram=tmpDir+"/gram.txt";
 	std::string tnet=tmpDir+"/net.txt";
-	
+
 	std::vector<std::string> vecM=readListFile(hmmList);
 	//make dict gram net mmf
 	WrapHParse wp;

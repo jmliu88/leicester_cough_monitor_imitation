@@ -8,7 +8,7 @@ featuredir='/home/zwang/data/hmm_mfcc'
 outDir='/home/zwang/data/exp_cv'
 
 factor=1.0
-thresh=1e7#ns
+thresh=0#1e7#ns
 nfold=2
 outname='evaluate_'+str(int(thresh/1e7))+'s_e.txt'
 
@@ -101,7 +101,7 @@ for itd in lis:
                 ok=False
                 for i in range(len(trueLab)):
                     sb=trueLab[i]
-                    if not (sa[0]>=sb[1] or sa[1]<=sb[0]):
+                    if not (sa[0]+0.016>=sb[1] or sa[1]-0.016<=sb[0]):
                           ok=True
                           chash[i]=1
                 if ok:

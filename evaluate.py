@@ -1,13 +1,11 @@
 #!/usr/local/bin/python
 import os
 import sys
-stp='s1'
-outpath='evaluate/'+stp+'.txt'
-test='evaluate/test.list'
-expected='/home/zwang/data/hmm_mfcc'
-predicted='exp/big/s1rec'
-thresh=1e7
-def foo():
+def foo(logname,predicted):
+    outpath='evaluate/'+logname+'.log'
+    test='evaluate/target.list'
+    expected='/home/zwang/data/hmm_mfcc'
+    thresh=-1e7#1e7
     tp=0
     pp=0
     p=0
@@ -65,7 +63,7 @@ def foo():
                 ok=False
                 for i in range(len(trueLab)):
                     sb=trueLab[i]
-                    if not (sa[0]>=sb[1] or sa[1]<=sb[0]):
+                    if not (sa[0]+0.016>sb[1] or sa[1]-0.016<sb[0]):
                           ok=True
                           chash[i]=1
                 if ok:
@@ -92,4 +90,8 @@ def foo():
     wptr.close()
 
 if __name__=='__main__':
-    foo()
+    if len(sys.argv)<=3:
+        print '3 param'
+        exit(0)
+    os.system('local/prepEvaluate.sh %s'%sys.argv[1])
+    foo(*sys.argv[2:])

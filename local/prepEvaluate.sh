@@ -6,4 +6,4 @@ fi
 if [ ! -e evaluate ];then
     mkdir -p evaluate
 fi
-cat $1 |sed 's/.*\/\(.*\).mfcc/\1/g'>evaluate/test.list
+cat $1 |sed 's/.*\/\(.*\).mfcc/\1/g'>evaluate/target.list
