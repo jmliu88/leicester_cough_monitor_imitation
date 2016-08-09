@@ -90,74 +90,74 @@ int main(int argc, char* argv[])
 	int task_type=atoi(argv[1]);
 	if(task_type==0)
 	{
-		std::string rootDir=std::string(argv[2]);
-		std::string dataDir=std::string(argv[3]);
-		std::string srcAudio=std::string(argv[4]);
-		std::string srcLab=std::string(argv[5]);
-		bool dmp3=atoi(argv[6]);
-		time(&s1);
-		doPreProcess(dataDir,srcAudio,srcLab,dmp3);
-		time(&s2);
-		cost=difftime(s2,s1);
-		char timeStr[64];
-		std::string timeLogPath=rootDir+"/preprocess.log";
-		FILE* timeLogFptr=fopen(timeLogPath.c_str(),"w");
-		fprintf(timeLogFptr,"cost:%lf\n",cost/60.0);
-		strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s1));
-		fputs(timeStr,timeLogFptr);
-		strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s2));
-		fputs(timeStr,timeLogFptr);
-		strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s3));
-		fputs(timeStr,timeLogFptr);
-		fclose(timeLogFptr);
+        std::string rootDir=std::string(argv[2]);
+        std::string dataDir=std::string(argv[3]);
+        std::string srcAudio=std::string(argv[4]);
+        std::string srcLab=std::string(argv[5]);
+        bool dmp3=atoi(argv[6]);
+        time(&s1);
+        doPreProcess(dataDir,srcAudio,srcLab,dmp3);
+        time(&s2);
+        cost=difftime(s2,s1);
+        char timeStr[64];
+        std::string timeLogPath=rootDir+"/preprocess.log";
+        FILE* timeLogFptr=fopen(timeLogPath.c_str(),"w");
+        fprintf(timeLogFptr,"cost:%lf\n",cost/60.0);
+        strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s1));
+        fputs(timeStr,timeLogFptr);
+        strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s2));
+        fputs(timeStr,timeLogFptr);
+        strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s3));
+        fputs(timeStr,timeLogFptr);
+        fclose(timeLogFptr);
 	}
 	else if(task_type==1)
 	{
-		std::string rootDir=std::string(argv[2]);
-		std::string dataDir=std::string(argv[3]);
-		int filler_exp=atoi(argv[4]);
-		time(&s1);
-		train(dataDir,rootDir,filler_exp);
-		time(&s2);
-		cost=difftime(s2,s1);
-		char timeStr[64];
-		std::string timeLogPath=rootDir+"/train.log";
-		FILE* timeLogFptr=fopen(timeLogPath.c_str(),"w");
-		fprintf(timeLogFptr,"cost:%lf\n",cost/60.0);
-		fprintf(timeLogFptr,"costTrain:%lf\n",costTrain/60.0);
-		fprintf(timeLogFptr,"costTest:%lf\n",costTest/60.0);
-		strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s1));
-		fputs(timeStr,timeLogFptr);
-		strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s2));
-		fputs(timeStr,timeLogFptr);
-		strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s3));
-		fputs(timeStr,timeLogFptr);
-		fclose(timeLogFptr);
+        std::string rootDir=std::string(argv[2]);
+        std::string dataDir=std::string(argv[3]);
+        int filler_exp=atoi(argv[4]);
+        time(&s1);
+        train(dataDir,rootDir,filler_exp);
+        time(&s2);
+        cost=difftime(s2,s1);
+        char timeStr[64];
+        std::string timeLogPath=rootDir+"/train.log";
+        FILE* timeLogFptr=fopen(timeLogPath.c_str(),"w");
+        fprintf(timeLogFptr,"cost:%lf\n",cost/60.0);
+        fprintf(timeLogFptr,"costTrain:%lf\n",costTrain/60.0);
+        fprintf(timeLogFptr,"costTest:%lf\n",costTest/60.0);
+        strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s1));
+        fputs(timeStr,timeLogFptr);
+        strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s2));
+        fputs(timeStr,timeLogFptr);
+        strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s3));
+        fputs(timeStr,timeLogFptr);
+        fclose(timeLogFptr);
 	}
     else if(task_type==2)
     {
         std::string rootDir=std::string(argv[2]);
         std::string testPath=std::string(argv[3]);
         std::string modelDir=std::string(argv[4]);
-		time(&s1);
-		test(modelDir,testPath,rootDir);
-		time(&s2);
-		cost=difftime(s2,s1);
-		char timeStr[64];
-		std::string timeLogPath=rootDir+"/test.log";
-		FILE* timeLogFptr=fopen(timeLogPath.c_str(),"w");
-		fprintf(timeLogFptr,"cost:%lf\n",cost/60.0);
-		strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s1));
-		fputs(timeStr,timeLogFptr);
-		strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s2));
-		fputs(timeStr,timeLogFptr);
-		strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s3));
-		fputs(timeStr,timeLogFptr);
-		fclose(timeLogFptr);
+	    time(&s1);
+        test(modelDir,testPath,rootDir);
+        time(&s2);
+        cost=difftime(s2,s1);
+        char timeStr[64];
+        std::string timeLogPath=rootDir+"/test.log";
+        FILE* timeLogFptr=fopen(timeLogPath.c_str(),"w");
+        fprintf(timeLogFptr,"cost:%lf\n",cost/60.0);
+        strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s1));
+        fputs(timeStr,timeLogFptr);
+        strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s2));
+        fputs(timeStr,timeLogFptr);
+        strftime(timeStr,sizeof(timeStr),"%Y/%m/%d %X\n",localtime(&s3));
+        fputs(timeStr,timeLogFptr);
+        fclose(timeLogFptr);
     }
 	else
 	{
-		printf("unknown tasktype\n");
+        printf("unknown tasktype\n");
 	}
 
 	return 0;
